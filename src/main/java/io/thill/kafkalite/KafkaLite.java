@@ -197,12 +197,6 @@ public class KafkaLite {
     if(started) {
       try(KafkaLiteClient client = new KafkaLiteClient()) {
         deleteTopic(topic, client);
-        while(client.kafkaZkClient().topicExists(topic)) {
-          idle();
-        }
-        while(client.kafkaConsumer().listTopics().containsKey(topic)) {
-          idle();
-        }
       }
       return true;
     } else {
@@ -214,6 +208,9 @@ public class KafkaLite {
     if(client.kafkaZkClient().topicExists(topic)) {
       LOGGER.info("Deleting Topic {}", topic);
       client.adminZkClient().deleteTopic(topic);
+      while(client.kafkaZkClient().topicExists(topic)) {
+        idle();
+      }
       while(client.kafkaConsumer().listTopics().containsKey(topic)) {
         idle();
       }
