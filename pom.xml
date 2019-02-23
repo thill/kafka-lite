@@ -4,7 +4,7 @@
 
     <groupId>io.thill.kafkalite</groupId>
     <artifactId>kafka-lite</artifactId>
-    <version>0.9.0</version>
+    <version>0.9.1-SNAPSHOT</version>
 
     <name>Kafka Lite</name>
     <description>A lightweight single-node Kafka deployment for testing purposes</description>
@@ -33,7 +33,7 @@
         <url>https://github.com/thillio/kafka-lite</url>
         <connection>scm:git:git@github.com:thillio/kafka-lite.git</connection>
         <developerConnection>scm:git:git@github.com:thillio/kafka-lite.git</developerConnection>
-        <tag>kafka-lite-0.9.0</tag>
+        <tag>HEAD</tag>
     </scm>
 
     <distributionManagement>
