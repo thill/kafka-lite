@@ -22,7 +22,7 @@ public class KafkaLiteTest {
 
   @Test
   public void testCreateTopic() {
-    final String topic = "my_topic";
+    final String topic = "testCreateTopic";
     final int partition = 3;
     final TopicPartition topicPartition = new TopicPartition(topic, partition);
 
@@ -55,7 +55,7 @@ public class KafkaLiteTest {
 
   @Test
   public void testDeleteTopic() {
-    final String topic = "my_topic";
+    final String topic = "testDeleteTopic";
 
     try(KafkaLiteClient client = new KafkaLiteClient()) {
       KafkaLite.createTopic(topic, 1);
@@ -72,7 +72,7 @@ public class KafkaLiteTest {
 
   @Test
   public void testStartStopStart() throws Exception {
-    final String topic = "my_topic";
+    final String topic = "testStartStopStart";
     final int partition = 3;
     final TopicPartition topicPartition = new TopicPartition(topic, partition);
 
@@ -122,6 +122,47 @@ public class KafkaLiteTest {
       Assert.assertEquals("V101", r2.value());
 
       Assert.assertTrue(consumer.isEmpty(100));
+    }
+  }
+
+  @Test
+  public void testCreateTopicIdempotence() {
+    final String topic = "testCreateTopicIdempotence";
+
+    KafkaLite.createTopic(topic, 1);
+    KafkaLite.createTopic(topic, 1);
+
+    try(KafkaLiteClient client = new KafkaLiteClient()) {
+      Assert.assertEquals(1, client.kafkaConsumer().listTopics().get(topic).size());
+    }
+
+    KafkaLite.createTopic(topic, 2);
+
+    try(KafkaLiteClient client = new KafkaLiteClient()) {
+      Assert.assertEquals(2, client.kafkaConsumer().listTopics().get(topic).size());
+    }
+  }
+
+  @Test
+  public void testDeleteTopicIdempotence() {
+    final String topic = "testDeleteTopicIdempotence";
+
+    KafkaLite.createTopic(topic, 1);
+
+    try(KafkaLiteClient client = new KafkaLiteClient()) {
+      Assert.assertEquals(1, client.kafkaConsumer().listTopics().get(topic).size());
+    }
+
+    KafkaLite.deleteTopic(topic);
+
+    try(KafkaLiteClient client = new KafkaLiteClient()) {
+      Assert.assertNull(client.kafkaConsumer().listTopics().get(topic));
+    }
+
+    KafkaLite.deleteTopic(topic);
+
+    try(KafkaLiteClient client = new KafkaLiteClient()) {
+      Assert.assertNull(client.kafkaConsumer().listTopics().get(topic));
     }
   }
 }

@@ -7,11 +7,13 @@ import kafka.server.KafkaConfig;
 import kafka.server.KafkaServerStartable;
 import org.apache.curator.test.InstanceSpec;
 import org.apache.curator.test.TestingServer;
+import org.apache.kafka.common.PartitionInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import sun.misc.Signal;
 
 import java.io.File;
+import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 
@@ -157,6 +159,16 @@ public class KafkaLite {
     LOGGER.debug("createTopic({}, {}, {})", topic, partitions, retentionMillis);
     if(started) {
       try(KafkaLiteClient client = new KafkaLiteClient()) {
+        List<PartitionInfo> existing = client.kafkaConsumer().listTopics().get(topic);
+        if(existing != null) {
+          if(existing.size() == partitions) {
+            LOGGER.debug("Topic {} already exists", topic);
+            return true;
+          } else {
+            LOGGER.info("Topic {} already exists with different number of partitions. Deleting and recreating...", topic);
+            deleteTopic(topic);
+          }
+        }
         Properties props = new Properties();
         props.setProperty("retention.ms", Long.toString(retentionMillis));
         props.setProperty("preallocate", "false");
@@ -199,10 +211,12 @@ public class KafkaLite {
   }
 
   private static synchronized void deleteTopic(String topic, KafkaLiteClient client) {
-    LOGGER.info("Deleting Topic {}", topic);
-    client.adminZkClient().deleteTopic(topic);
-    while(client.kafkaConsumer().listTopics().containsKey(topic)) {
-      idle();
+    if(client.kafkaZkClient().topicExists(topic)) {
+      LOGGER.info("Deleting Topic {}", topic);
+      client.adminZkClient().deleteTopic(topic);
+      while(client.kafkaConsumer().listTopics().containsKey(topic)) {
+        idle();
+      }
     }
   }
 
