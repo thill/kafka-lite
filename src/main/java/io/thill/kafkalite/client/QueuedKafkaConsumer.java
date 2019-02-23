@@ -36,7 +36,7 @@ public class QueuedKafkaConsumer<K, V> implements AutoCloseable {
    * Seek to beginning of topic partition
    */
   public void seekToBeginning() {
-    consumer.seekToEnd(Arrays.asList(topicPartition));
+    consumer.seekToBeginning(Arrays.asList(topicPartition));
   }
 
   /**
@@ -64,6 +64,7 @@ public class QueuedKafkaConsumer<K, V> implements AutoCloseable {
   public ConsumerRecord<K, V> poll(Duration timeout) {
     if(queue.size() == 0) {
       for(ConsumerRecord<K, V> r : consumer.poll(timeout)) {
+        logger.debug("Received {}", r);
         queue.add(r);
       }
     }
@@ -76,7 +77,9 @@ public class QueuedKafkaConsumer<K, V> implements AutoCloseable {
 
   public boolean isEmpty(long waitMillis) {
     try {
-      Thread.sleep(waitMillis);
+      if(waitMillis > 0) {
+        Thread.sleep(waitMillis);
+      }
     } catch(InterruptedException e) {
       // move on
     }
